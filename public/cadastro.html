@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="pt-BR">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Criar conta</title><link rel="stylesheet" href="/estilo.css"></head>
+<body><main>
+  <h1>Criar conta</h1>
+  <form id="form" novalidate>
+    <label for="email">E-mail</label>
+    <input id="email" type="email" autocomplete="username">
+    <label for="senha">Senha</label>
+    <input id="senha" type="password" autocomplete="new-password" aria-describedby="dica">
+    <span id="dica" class="dica">De 8 a 64 caracteres</span>
+    <button type="submit">Criar conta</button>
+  </form>
+  <p id="mensagem" hidden></p>
+  <nav><a id="ir-login" href="/" hidden>Ir para o login</a></nav>
+</main>
+<script src="/app.js"></script>
+<script>
+  $('form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const r = await enviar('/cadastro', { email: $('email').value, senha: $('senha').value });
+    if (r.ok) { mostrar('ok', r.corpo.mensagem); $('ir-login').hidden = false; }
+    else mostrar('erro', r.corpo.erro);
+  });
+</script></body></html>

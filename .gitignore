@@ -1,0 +1,8 @@
+node_modules/
+coverage/
+test-results/
+test-results-demos/
+playwright-report/
+playwright-report-demos/
+playwright/.auth/
+blob-report/

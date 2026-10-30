@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="pt-BR">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Redefinir senha</title><link rel="stylesheet" href="/estilo.css"></head>
+<body><main>
+  <h1>Redefinir senha</h1>
+  <form id="form" novalidate>
+    <label for="nova-senha">Nova senha</label>
+    <input id="nova-senha" type="password" autocomplete="new-password" aria-describedby="dica">
+    <span id="dica" class="dica">De 8 a 64 caracteres</span>
+    <button type="submit">Redefinir senha</button>
+  </form>
+  <p id="mensagem" hidden></p>
+  <nav>
+    <a id="ir-login" href="/" hidden>Entrar</a>
+    <a id="novo-link" href="/recuperar.html" hidden>Solicitar novo link</a>
+  </nav>
+</main>
+<script src="/app.js"></script>
+<script>
+  const token = new URLSearchParams(location.search).get('token');
+  $('form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const r = await enviar('/recuperacao/redefinir', { token, novaSenha: $('nova-senha').value });
+    if (r.ok) { mostrar('ok', r.corpo.mensagem); $('ir-login').hidden = false; $('form').hidden = true; }
+    else { mostrar('erro', r.corpo.erro); $('novo-link').hidden = r.status !== 410; }
+  });
+</script></body></html>

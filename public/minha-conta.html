@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="pt-BR">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Minha conta</title><link rel="stylesheet" href="/estilo.css"></head>
+<body><main>
+  <h1>Minha conta</h1>
+  <p>Olá, <strong data-testid="usuario-logado" id="usuario"></strong></p>
+  <button id="sair" type="button">Sair</button>
+</main>
+<script src="/app.js"></script>
+<script>
+  (async () => {
+    const r = await enviar('/eu', null, 'GET');
+    if (!r.ok) { location.href = '/'; return; }
+    $('usuario').textContent = r.corpo.email;
+  })();
+  $('sair').addEventListener('click', async () => { await enviar('/logout'); location.href = '/'; });
+</script></body></html>

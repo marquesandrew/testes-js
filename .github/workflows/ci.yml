@@ -1,0 +1,100 @@
+name: CI
+
+# QUANDO roda (cada gatilho tem um motivo):
+on:
+  pull_request:                    # barreira de merge: o que protege a main
+  push:
+    branches: [main]               # confirma que a main continua verde após o merge
+    tags: ['v*']                   # tag vX.Y.Z => candidata a release
+  schedule:
+    - cron: '0 6 * * 1-5'          # noturno (06:00 UTC, seg-sex): suíte cara, todos os navegadores
+  workflow_dispatch:               # botão manual
+
+# Novo push no mesmo PR cancela a execução anterior (não gasta minutos à toa)
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# Princípio do menor privilégio: o CI só lê o repositório
+permissions:
+  contents: read
+
+jobs:
+  # ---------------------------------------------------------------- JOB 1: rápido, roda sempre
+  qualidade:
+    name: Qualidade (lint, testes, cobertura, gates)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm                  # reaproveita ~/.npm entre execuções (chave = package-lock.json)
+      - run: npm ci                   # instalação exata do lockfile (nunca `npm install` em CI)
+
+      - name: Lint
+        run: npm run lint
+      - name: "Testes + cobertura (gate 1: coverageThreshold do Jest)"
+        run: npm run test:coverage
+      - name: Testes BDD (Cucumber)
+        run: npm run test:bdd
+      - name: "Quality gate (gate 2: ratchet; gate 3: higiene)"
+        run: npm run quality
+      - name: "Auditoria de dependências (gate 4: só produção, severidade alta)"
+        run: npm run audit:prod
+
+      - name: Guardar relatório de cobertura
+        if: always()                  # evidência existe MESMO quando o job falha
+        uses: actions/upload-artifact@v4
+        with:
+          name: cobertura
+          path: coverage/
+          retention-days: 7
+
+  # ---------------------------------------------------------------- JOB 2: E2E (mais lento, só depois do JOB 1)
+  e2e:
+    name: E2E (${{ matrix.projeto }})
+    needs: qualidade                  # não gasta navegador se o básico já falhou
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        # PR e push: só Chromium (rápido e barato). Noturno/manual: os 3 navegadores.
+        projeto: ${{ (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && fromJSON('["chromium","firefox","webkit"]') || fromJSON('["chromium"]') }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Instalar navegador (${{ matrix.projeto }})
+        run: npx playwright install --with-deps ${{ matrix.projeto }}
+      - name: Testes E2E
+        run: npx playwright test --project=${{ matrix.projeto }}
+      - name: Guardar evidências (relatório, vídeos, traces)
+        if: failure()                 # evidência só quando falhou (e o `retain-on-failure` já filtra o que existe)
+        uses: actions/upload-artifact@v4
+        with:
+          name: evidencias-e2e-${{ matrix.projeto }}
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7
+
+  # ---------------------------------------------------------------- JOB 3: release (só em tag vX.Y.Z)
+  release:
+    name: Critério de release
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [qualidade, e2e]           # release exige TUDO verde
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Tag = package.json = CHANGELOG
+        run: node scripts/release-check.js "${GITHUB_REF_NAME}"

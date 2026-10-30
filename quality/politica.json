@@ -1,0 +1,12 @@
+{
+  "_leia": "Política de qualidade como CÓDIGO. Mudar um número aqui é uma decisão de time: passa por pull request.",
+  "cobertura": {
+    "minimos": { "statements": 90, "branches": 80, "functions": 90, "lines": 90 },
+    "tolerancia_queda_pontos": 0
+  },
+  "higiene": {
+    "bloquear": ["\\.only\\(", "\\.skip\\(", "\\bxit\\(", "\\bxdescribe\\(", "\\bfit\\(", "\\bfdescribe\\("],
+    "pastas": ["tests", "e2e", "features"],
+    "excecao": "quality-gate:permitido"
+  }
+}

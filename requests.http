@@ -1,0 +1,28 @@
+### Requer a extensão "REST Client" (humao.rest-client) no VSCode.
+### Suba a API antes: npm start
+
+@host = http://localhost:3000
+
+### 1) Criar tarefa válida -> 201
+POST {{host}}/tarefas
+Content-Type: application/json
+
+{ "titulo": "Estudar Supertest" }
+
+### 2) Payload inválido -> 400
+POST {{host}}/tarefas
+Content-Type: application/json
+
+{}
+
+### 3) Buscar tarefa existente -> 200
+GET {{host}}/tarefas/1
+
+### 4) Buscar tarefa inexistente -> 404
+GET {{host}}/tarefas/999
+
+### 5) Listar -> 200
+GET {{host}}/tarefas
+
+### 6) Apagar (rode duas vezes: 204 nas duas = idempotente)
+DELETE {{host}}/tarefas/1

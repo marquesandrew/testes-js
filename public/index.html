@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="pt-BR">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Entrar</title><link rel="stylesheet" href="/estilo.css"></head>
+<body><main>
+  <h1>Entrar</h1>
+  <form id="form" novalidate>
+    <label for="email">E-mail</label>
+    <input id="email" type="email" autocomplete="username">
+    <label for="senha">Senha</label>
+    <input id="senha" type="password" autocomplete="current-password">
+    <button type="submit">Entrar</button>
+  </form>
+  <p id="mensagem" hidden></p>
+  <nav><a href="/cadastro.html">Criar conta</a> · <a href="/recuperar.html">Esqueci minha senha</a></nav>
+</main>
+<script src="/app.js"></script>
+<script>
+  $('form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const r = await enviar('/login', { email: $('email').value, senha: $('senha').value });
+    if (r.ok) location.href = '/minha-conta.html';
+    else mostrar('erro', r.corpo.erro);
+  });
+</script></body></html>
