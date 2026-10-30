@@ -46,7 +46,7 @@ jobs:
 
       - name: Guardar relatório de cobertura
         if: always()                  # evidência existe MESMO quando o job falha
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: cobertura
           path: coverage/
@@ -76,7 +76,7 @@ jobs:
         run: npx playwright test --project=${{ matrix.projeto }}
       - name: Guardar evidências (relatório, vídeos, traces)
         if: failure()                 # evidência só quando falhou (e o `retain-on-failure` já filtra o que existe)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: evidencias-e2e-${{ matrix.projeto }}
           path: |
